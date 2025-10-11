@@ -303,6 +303,7 @@ class Grow_Mask_Ultra_Fast:
                 "mask": ("MASK",),
                 "expand_by": ("INT", {"default": 0, "min": -255, "max": 255, "step": 1}),
                 "tapered_corners": ("BOOLEAN", {"default": True}),
+                "batch_size": ("INT", {"default": 5, "min": 1, "max": 50, "step": 1}),
                 "device": (device_list, {"default": device_list[0]}),
             }
         }
@@ -311,11 +312,27 @@ class Grow_Mask_Ultra_Fast:
     RETURN_NAMES = ("mask",)
     FUNCTION = "grow_mask"
     
-    def grow_mask(self, mask, expand_by, tapered_corners, device):
-        mask_bchw = mask.unsqueeze(1).to(device)
-        processed_mask_bchw = expand_mask_batch(mask_bchw, expand_by, tapered_corners)
-        final_mask = processed_mask_bchw.squeeze(1)
-    
+    def grow_mask(self, mask, expand_by, tapered_corners, batch_size, device):
+        total_masks = mask.shape[0]
+        
+        if total_masks == 0 or expand_by == 0:
+            return (mask,)
+        
+        processed_chunks = []
+        pbar = comfy.utils.ProgressBar(total_masks)
+        
+        for i in range(0, total_masks, batch_size):
+            chunk = mask[i:i + batch_size]
+            chunk_on_device = chunk.to(device)
+            
+            chunk_bchw = chunk_on_device.unsqueeze(1)
+            processed_chunk_bchw = expand_mask_batch(chunk_bchw, expand_by, tapered_corners)
+            processed_chunk = processed_chunk_bchw.squeeze(1)
+            processed_chunks.append(processed_chunk.cpu())
+            
+            pbar.update(chunk.shape[0])
+            
+        final_mask = torch.cat(processed_chunks, dim=0)
         return (final_mask,)
 
 NODE_CLASS_MAPPINGS = {

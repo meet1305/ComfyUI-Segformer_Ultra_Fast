@@ -154,35 +154,30 @@ def mask_edge_detail_batch(image_batch: torch.Tensor, mask_batch: torch.Tensor, 
     
     return alpha_batch_tensor
 
-def expand_mask_batch(mask_batch: torch.Tensor, expand_pixels: int, chamfer: bool) -> torch.Tensor:
+import torch
+import kornia.morphology as kornia_morph
+import kornia.filters as kornia_filters
+
+def expand_mask_batch(mask_batch: torch.Tensor, expand_pixels: int, tapered_corners: bool) -> torch.Tensor:
     if expand_pixels == 0:
         return mask_batch
     
     device = mask_batch.device
     abs_expand = abs(expand_pixels)
     
-    kernel_size = abs_expand * 2 + 1
-    kernel = torch.ones(kernel_size, kernel_size, device=device)
+    c = 0 if tapered_corners else 1
+    kernel_np = np.array([[c, 1, c], [1, 1, 1], [c, 1, c]])
+    kernel = torch.from_numpy(kernel_np).float().to(device)
+    processed_mask = mask_batch.reshape((-1, mask_batch.shape[-2], mask_batch.shape[-1])).unsqueeze(1)
     
-    if expand_pixels > 0:
-        dilated_mask = kornia_morph.dilation(mask_batch, kernel)
-        if chamfer:
-            blurred_mask = kornia_filters.gaussian_blur2d(
-                dilated_mask, (kernel_size, kernel_size), (abs_expand, abs_expand)
-            )
-            return (blurred_mask > 0.5).float()
+    for _ in range(abs_expand):
+        if expand_pixels > 0:
+            processed_mask = kornia_morph.dilation(processed_mask, kernel)
         else:
-            return dilated_mask
-    else:
-        if chamfer:
-            blurred_mask = kornia_filters.gaussian_blur2d(
-                mask_batch, (kernel_size, kernel_size), (abs_expand, abs_expand)
-            )
-            thresholded_mask = (blurred_mask > 0.5).float()
-            eroded_mask = kornia_morph.erosion(thresholded_mask, kernel)
-            return eroded_mask
-        else:
-            return kornia_morph.erosion(mask_batch, kernel)
+            processed_mask = kornia_morph.erosion(processed_mask, kernel)
+    
+    final_mask = processed_mask.squeeze(1)
+    return final_mask
 
 def get_device_list():
     devs = []
