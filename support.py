@@ -168,7 +168,7 @@ def expand_mask_batch(mask_batch_4d: torch.Tensor, expand_pixels: int, tapered_c
     c = 0 if tapered_corners else 1
     kernel_np = np.array([[c, 1, c], [1, 1, 1], [c, 1, c]])
     kernel = torch.from_numpy(kernel_np).float().to(device)
-    processed_mask = mask_batch_4d.clone()
+    processed_mask = mask_batch_4d
     
     for _ in range(abs_expand):
         if expand_pixels > 0:
