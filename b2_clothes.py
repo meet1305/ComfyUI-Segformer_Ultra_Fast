@@ -102,7 +102,7 @@ class Segformer_B2_Clothes_Labels:
     def INPUT_TYPES(cls):
         return {"required":
             {
-                "face": ("BOOLEAN", {"default": False}), "hair": ("BOOLEAN", {"default": False}),
+                "face_torso": ("BOOLEAN", {"default": False}), "hair": ("BOOLEAN", {"default": False}),
                 "hat": ("BOOLEAN", {"default": False}), "sunglass": ("BOOLEAN", {"default": False}),
                 "left_arm": ("BOOLEAN", {"default": False}), "right_arm": ("BOOLEAN", {"default": False}),
                 "left_leg": ("BOOLEAN", {"default": False}), "right_leg": ("BOOLEAN", {"default": False}),
@@ -119,7 +119,7 @@ class Segformer_B2_Clothes_Labels:
     FUNCTION = "get_labels"
     CATEGORY = 'Mask'
     
-    def get_labels(self, face, hat, hair, sunglass, upper_clothes, skirt, pants, dress, belt,
+    def get_labels(self, face_torso, hat, hair, sunglass, upper_clothes, skirt, pants, dress, belt,
         shoe, left_leg, right_leg, left_arm, right_arm, bag, scarf, everything_else):
         
         labels_to_keep = []
@@ -133,7 +133,7 @@ class Segformer_B2_Clothes_Labels:
         if not dress: labels_to_keep.append(7)
         if not belt: labels_to_keep.append(8)
         if not shoe: labels_to_keep.extend([9, 10])
-        if not face: labels_to_keep.append(11)
+        if not face_torso: labels_to_keep.append(11)
         if not left_leg: labels_to_keep.append(12)
         if not right_leg: labels_to_keep.append(13)
         if not left_arm: labels_to_keep.append(14)
