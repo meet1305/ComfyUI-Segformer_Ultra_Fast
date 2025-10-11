@@ -5,8 +5,8 @@ Run Segformer models at lightning speed for image/video segmentation.
 
 ## Preview / 效果演示
 <p>
-<img alt="preview1" src="./img/preview1.png" height="240"/>
-<img alt="preview2" src="./img/preview2.png" height="240"/>
+<img alt="preview1" src="./img/preview1.png" height="270"/>
+<img alt="preview2" src="./img/preview2.png" height="270"/>
 </p>
 
 ## Usage / 使用方法
