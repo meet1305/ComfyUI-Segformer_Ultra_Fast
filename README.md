@@ -1,4 +1,4 @@
-# Comfyui-QwenPromptRewriter
+# ComfyUI-Segformer_Ultra_Fast
 Run `Segformer` at lightning speed for image/video segmentation.  
 
 以极快的速度运行 `Segformer` 模型进行图像/视频内容分割.  
