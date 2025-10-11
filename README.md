@@ -1,7 +1,7 @@
 # Comfyui-QwenPromptRewriter
-Run Segformer models at lightning speed for image/video segmentation.  
+Run `Segformer` at lightning speed for image/video segmentation.  
 
-以极快的速度运行 Segformer 模型进行图像/视频内容分割.  
+以极快的速度运行 `Segformer` 模型进行图像/视频内容分割.  
 
 ## Preview / 效果演示
 <p>
