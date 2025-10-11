@@ -237,14 +237,99 @@ class Segformer_B2_Fashion_Labels:
             
         return (labels_to_keep,)
 
+class Mask_To_Bbox_SAM2:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "invert": ("BOOLEAN", {"default": False}),
+            },
+            "optional": {
+                "image": ("IMAGE", {"tooltip": "Optional image"}),
+            },
+        }
+    
+    RETURN_TYPES = ("BBOX", "IMAGE",)
+    RETURN_NAMES = ("bboxes", "image (optional)",)
+    FUNCTION = "extract_bounding_boxes"
+    CATEGORY = "mtb/crop"
+    
+    def extract_bounding_boxes(
+        self,
+        mask: torch.Tensor,
+        *,
+        invert: bool = False,
+        image: torch.Tensor | None = None,
+    ) -> tuple[list[list[int]], torch.Tensor | None]:
+        
+        mask = 1 - mask if invert else mask
+        non_zero_indices = torch.nonzero(mask)
+        
+        if non_zero_indices.numel() == 0:
+            print("⚠️ BboxesFromMask: Mask is empty, returning empty bbox list.")
+            return ([], image)
+        
+        if mask.ndim == 3:
+            bboxes_list = []
+            for m in mask:
+                nz = torch.nonzero(m)
+                if nz.numel() == 0:
+                    continue
+                min_coords = torch.min(nz, dim=0).values
+                max_coords = torch.max(nz, dim=0).values
+                y1, x1 = min_coords[0].item(), min_coords[1].item()
+                y2, x2 = max_coords[0].item(), max_coords[1].item()
+                bboxes_list.append([x1, y1, x2, y2])
+        else:
+            min_coords = torch.min(non_zero_indices, dim=0).values
+            max_coords = torch.max(non_zero_indices, dim=0).values
+            y1, x1 = min_coords[-2].item(), min_coords[-1].item()
+            y2, x2 = max_coords[-2].item(), max_coords[-1].item()
+            bboxes_list = [[x1, y1, x2, y2]]
+            
+        cropped_image = None
+        if image is not None and len(bboxes_list) > 0:
+            x1, y1, x2, y2 = bboxes_list[0]
+            cropped_image = image[:, y1:y2 + 1, x1:x2 + 1, :]
+            
+        return (bboxes_list, cropped_image)
+
+class Grow_Mask_Ultra_Fast:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "mask": ("MASK",),
+                "expand_by": ("INT", {"default": 0, "min": -255, "max": 255, "step": 1}),
+                "tapered_corners": ("BOOLEAN", {"default": True}),
+                "device": (device_list, {"default": device_list[0]}),
+            }
+        }
+    
+    RETURN_TYPES = ("MASK",)
+    RETURN_NAMES = ("mask",)
+    FUNCTION = "grow_mask"
+    
+    def grow_mask(self, mask, expand_by, tapered_corners, device):
+        mask_bchw = mask.unsqueeze(1).to(device)
+        processed_mask_bchw = expand_mask_batch(mask_bchw, expand_by, tapered_corners)
+        final_mask = processed_mask_bchw.squeeze(1)
+    
+        return (final_mask,)
+
 NODE_CLASS_MAPPINGS = {
     "SegformerB2ClothesUltraBatch": Segformer_B2_Clothes_Fast,
     "Segformer_B2_Clothes_Labels": Segformer_B2_Clothes_Labels,
     "Segformer_B2_Clothes_Fashion_Labels": Segformer_B2_Fashion_Labels,
+    "Mask_To_Bbox_SAM2": Mask_To_Bbox_SAM2,
+    "Grow_Mask_Ultra_Fast": Grow_Mask_Ultra_Fast,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SegformerB2ClothesUltraBatch": "Segformer B2 Clothes Ultra Fast",
+    "SegformerB2ClothesUltraBatch": "Segformer B2 Clothes Ultra-Fast",
     "Segformer_B2_Clothes_Labels": "Segformer B2 Clothes Label",
     "Segformer_B2_Clothes_Fashion_Labels": "Segformer B2 Fashion Label",
+    "Mask_To_Bbox_SAM2": "Mask To Bbox (SAM2)",
+    "Grow_Mask_Ultra_Fast": "GrowMask Ultra-Fast",
 }

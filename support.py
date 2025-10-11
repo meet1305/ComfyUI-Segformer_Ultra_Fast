@@ -173,7 +173,7 @@ def expand_mask_batch(mask_batch: torch.Tensor, expand_pixels: int, chamfer: boo
             return (blurred_mask > 0.5).float()
         else:
             return dilated_mask
-    else: # expand_pixels < 0
+    else:
         if chamfer:
             blurred_mask = kornia_filters.gaussian_blur2d(
                 mask_batch, (kernel_size, kernel_size), (abs_expand, abs_expand)
