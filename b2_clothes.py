@@ -143,7 +143,7 @@ class Segformer_B2_Clothes_Labels:
             
         return (labels_to_keep,)
     
-class Segformer_B2_Clothes_Fashion_Labels:
+class Segformer_B2_Fashion_Labels:
     @classmethod
     def INPUT_TYPES(cls):
         return {"required":
@@ -240,11 +240,11 @@ class Segformer_B2_Clothes_Fashion_Labels:
 NODE_CLASS_MAPPINGS = {
     "SegformerB2ClothesUltraBatch": Segformer_B2_Clothes_Fast,
     "Segformer_B2_Clothes_Labels": Segformer_B2_Clothes_Labels,
-    "Segformer_B2_Clothes_Fashion_Labels": Segformer_B2_Clothes_Fashion_Labels,
+    "Segformer_B2_Clothes_Fashion_Labels": Segformer_B2_Fashion_Labels,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "SegformerB2ClothesUltraBatch": "Segformer B2 Clothes Ultra Fast",
     "Segformer_B2_Clothes_Labels": "Segformer B2 Clothes Label",
-    "Segformer_B2_Clothes_Fashion_Labels": "Segformer B2 Clothes Fashion Label",
+    "Segformer_B2_Clothes_Fashion_Labels": "Segformer B2 Fashion Label",
 }
