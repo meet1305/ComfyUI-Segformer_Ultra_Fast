@@ -158,17 +158,17 @@ import torch
 import kornia.morphology as kornia_morph
 import kornia.filters as kornia_filters
 
-def expand_mask_batch(mask_batch: torch.Tensor, expand_pixels: int, tapered_corners: bool) -> torch.Tensor:
+def expand_mask_batch(mask_batch_4d: torch.Tensor, expand_pixels: int, tapered_corners: bool) -> torch.Tensor:
     if expand_pixels == 0:
-        return mask_batch
+        return mask_batch_4d
     
-    device = mask_batch.device
+    device = mask_batch_4d.device
     abs_expand = abs(expand_pixels)
     
     c = 0 if tapered_corners else 1
     kernel_np = np.array([[c, 1, c], [1, 1, 1], [c, 1, c]])
     kernel = torch.from_numpy(kernel_np).float().to(device)
-    processed_mask = mask_batch.reshape((-1, mask_batch.shape[-2], mask_batch.shape[-1])).unsqueeze(1)
+    processed_mask = mask_batch_4d.clone()
     
     for _ in range(abs_expand):
         if expand_pixels > 0:
@@ -176,8 +176,7 @@ def expand_mask_batch(mask_batch: torch.Tensor, expand_pixels: int, tapered_corn
         else:
             processed_mask = kornia_morph.erosion(processed_mask, kernel)
     
-    final_mask = processed_mask.squeeze(1)
-    return final_mask
+    return processed_mask
 
 def get_device_list():
     devs = []

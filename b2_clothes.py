@@ -39,7 +39,7 @@ class Segformer_B2_Clothes_Fast:
     RETURN_TYPES = ("IMAGE", "MASK",)
     RETURN_NAMES = ("image", "mask",)
     FUNCTION = "segformer_ultra_fast"
-    CATEGORY = 'Mask'
+    CATEGORY = 'Segformer Ultra-Fast/Mask'
 
     def segformer_ultra_fast(self, image, labels, model, batch_size, max_megapixels, detail_erode, detail_dilate,
         process_detail, detail_method, expand_mask, tapered_corners, black_point, white_point, device):
@@ -82,7 +82,7 @@ class Segformer_B2_Clothes_Fast:
             
             if expand_mask != 0:
                 final_mask_chunk = expand_mask_batch(final_mask_chunk, expand_mask, tapered_corners)
-            
+
             image_chunk_bchw = image_chunk_on_device.permute(0, 3, 1, 2)
             final_images_chunk_bchw = torch.cat((image_chunk_bchw, final_mask_chunk), dim=1)
             final_images_chunk = final_images_chunk_bchw.permute(0, 2, 3, 1).contiguous()
@@ -91,10 +91,9 @@ class Segformer_B2_Clothes_Fast:
             processed_image_chunks.append(final_images_chunk.cpu())
             processed_mask_chunks.append(final_masks_chunk.cpu())
             pbar.update(image_chunk.shape[0])
-
+        
         final_images = torch.cat(processed_image_chunks, dim=0)
         final_masks = torch.cat(processed_mask_chunks, dim=0)
-        
         return (final_images, final_masks)
 
 class Segformer_B2_Clothes_Labels:
@@ -117,7 +116,7 @@ class Segformer_B2_Clothes_Labels:
     RETURN_TYPES = (any_typ, )
     RETURN_NAMES = ("labels",)
     FUNCTION = "get_labels"
-    CATEGORY = 'Mask'
+    CATEGORY = 'Segformer Ultra-Fast/Label'
     
     def get_labels(self, face_torso, hat, hair, sunglass, upper_clothes, skirt, pants, dress, belt,
         shoe, left_leg, right_leg, left_arm, right_arm, bag, scarf, everything_else):
@@ -178,7 +177,7 @@ class Segformer_B2_Fashion_Labels:
     RETURN_TYPES = (any_typ, )
     RETURN_NAMES = ("labels",)
     FUNCTION = "get_labels"
-    CATEGORY = 'Mask'
+    CATEGORY = 'Segformer Ultra-Fast/Label'
     
     def get_labels(self, shirt_blouse, top_tShirt_sweatshirt, sweater, cardigan, jacket, vest,
         pants, shorts, skirt, coat, dress, jumpsuit, cape, glasses, hat, headband_hairAccessory,
@@ -253,7 +252,7 @@ class Mask_To_Bbox_SAM2:
     RETURN_TYPES = ("BBOX", "IMAGE",)
     RETURN_NAMES = ("bboxes", "image (optional)",)
     FUNCTION = "extract_bounding_boxes"
-    CATEGORY = "mtb/crop"
+    CATEGORY = 'Segformer Ultra-Fast/Crop'
     
     def extract_bounding_boxes(
         self,
@@ -311,10 +310,10 @@ class Grow_Mask_Ultra_Fast:
     RETURN_TYPES = ("MASK",)
     RETURN_NAMES = ("mask",)
     FUNCTION = "grow_mask"
+    CATEGORY = 'Segformer Ultra-Fast/Mask'
     
     def grow_mask(self, mask, expand_by, tapered_corners, batch_size, device):
         total_masks = mask.shape[0]
-        
         if total_masks == 0 or expand_by == 0:
             return (mask,)
         
@@ -324,11 +323,11 @@ class Grow_Mask_Ultra_Fast:
         for i in range(0, total_masks, batch_size):
             chunk = mask[i:i + batch_size]
             chunk_on_device = chunk.to(device)
+            chunk_4d = chunk_on_device.unsqueeze(1)
             
-            chunk_bchw = chunk_on_device.unsqueeze(1)
-            processed_chunk_bchw = expand_mask_batch(chunk_bchw, expand_by, tapered_corners)
-            processed_chunk = processed_chunk_bchw.squeeze(1)
-            processed_chunks.append(processed_chunk.cpu())
+            processed_chunk_4d = expand_mask_batch(chunk_4d, expand_by, tapered_corners)
+            processed_chunk_3d = processed_chunk_4d.squeeze(1)
+            processed_chunks.append(processed_chunk_3d.cpu())
             
             pbar.update(chunk.shape[0])
             
