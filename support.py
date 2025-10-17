@@ -1,6 +1,7 @@
 import os
 import math
 import torch
+import shutil
 import folder_paths
 
 import numpy as np
@@ -40,7 +41,12 @@ def tensor2pil(t_image: torch.Tensor)  -> Image:
 
 @lru_cache(maxsize=1)
 def load_segmentation_model(model_name='mattmdjaga/segformer_b2_clothes', device='cpu'):
-    model_dir = os.path.join(folder_paths.models_dir, model_name.split("/")[-1])
+    old_model_dir = os.path.join(folder_paths.models_dir, model_name.split("/")[-1])
+    model_dir = os.path.join(folder_paths.models_dir, "segformer", model_name.replace("/", "-"))
+    if not os.path.exists(model_dir) and os.path.exists(old_model_dir):
+        log("Old model folder found, moving to new location...")
+        os.makedirs(os.path.dirname(model_dir), exist_ok=True)
+        shutil.move(old_model_dir, model_dir)
     if not os.path.exists(model_dir):
         log(f"Downloading segmentation model '{model_name}' from huggingface...", message_type='info')
         snapshot_download(repo_id=model_name, local_dir=model_dir, local_dir_use_symlinks=False, resume_download=True)
@@ -54,7 +60,11 @@ def load_segmentation_model(model_name='mattmdjaga/segformer_b2_clothes', device
 
 @lru_cache(maxsize=1)
 def load_VITMatte_model(model_name="hustvl/vitmatte-small-composition-1k", fast=True):
-    model_dir = os.path.join(folder_paths.models_dir, model_name.split("/")[-1])
+    old_model_dir = os.path.join(folder_paths.models_dir, model_name.split("/")[-1])
+    model_dir = os.path.join(folder_paths.models_dir, "vitmatte")
+    if not os.path.exists(model_dir) and os.path.exists(old_model_dir):
+        log("Old model folder found, moving to new location...")
+        os.rename(old_model_dir, model_dir)
     if not os.path.exists(model_dir):
         log(f"Downloading VITMatte model '{model_name}' from huggingface...", message_type='info')
         snapshot_download(repo_id=model_name, local_dir=model_dir, local_dir_use_symlinks=False, resume_download=True)
